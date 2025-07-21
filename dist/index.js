@@ -1,0 +1,9 @@
+import express from 'express';
+const app = express();
+const port = process.env.PORT || 3001;
+app.get('/', (req, res) => {
+    res.send('oi');
+});
+app.listen(port, () => {
+    console.log(`running at http:localhost:${port}`);
+});

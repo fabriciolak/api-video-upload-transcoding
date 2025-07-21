@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // Environment settings
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+
+    // Types
+    "types": ["node"],
+
+     // Module resolution
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": false,
+    
+    // Strictness and best practices
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Output settings
+    "declaration": true,
+    "outDir": "./dist",
+    "noEmit": false,
+
+     // Output control
+    "skipLibCheck": true,
+
+    // Optional strict flags (disabled by default)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
