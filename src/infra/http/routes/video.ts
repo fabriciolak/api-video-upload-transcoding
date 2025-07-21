@@ -1,39 +1,25 @@
 import type { Request, Response } from "express";
-
-import ffmpeg from "fluent-ffmpeg";
+import { convertVideoToMP3 } from "../../../shared/ffmpeg";
 
 export async function video(req: Request, res: Response): Promise<void> {
   try {
     const { videoId } = req.params
 
-    const inputPath = req.file?.path;
-    const outputPath = `./uploads/converted-${Date.now()}.mp4`;
+    if (!req.file) {
+      res.status(400).json({ error: 'No video file uploaded' });
+      return;
+    }
 
-    ffmpeg(inputPath)
-      .output(outputPath)
-      .videoCodec('libx264')
-      .audioCodec('aac')
-      .on('end', () => {
-        res.download(outputPath, (err) => {
-          if (err) {
-            console.error('Error downloading file:', err);
-            res.status(500).json({ error: 'Error downloading file' });
-          } else {
-            console.log('File downloaded successfully');
-          }
-        })
-      })
-      .on('error', (err) => {
-        console.error('Error processing video:', err);
-        res.status(500).json({ error: 'Error processing video' });
-      })
-      .run();
+    const file = await convertVideoToMP3(req.file, (progress: number) => {
+      const progressPercentage = Math.round(progress);
+      console.log(`Conversion progress: ${progressPercentage}%`);
+    });
 
     res.status(200).json({
       videoId,
       message: 'Video status retrieved successfully',
       status: 'Processing',
-      file: req.file
+      file
     })
   } catch (error) {
     res.status(500).json({ error: 'Erro ao processar o vídeo' });
