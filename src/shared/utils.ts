@@ -26,6 +26,8 @@ export const multer = {
       fileSize: 100 * 1024 * 1024, // 100 MB
     },
     fileFilter: (req, file, cb) => {
+      // TODO: Change this to a more robust validation
+      // Change it to environment variable later
       const filetypes = /\.(mp4|mov|avi|mkv)$/i; // Regex para extensões
       const mimetypes = /video\/mp4|video\/quicktime|video\/x-msvideo|video\/x-matroska/; // MIME types válidos
       const extname = filetypes.test(path.extname(file.originalname).toLowerCase());

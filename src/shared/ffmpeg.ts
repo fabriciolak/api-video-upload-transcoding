@@ -15,9 +15,7 @@ export async function convertVideoToMP3(
       .audioBitrate('32k')
       .audioCodec('libmp3lame')
       .on('progress', (progress) => {
-        const progressPercentage = Math.round(progress.percent! * 100)
-
-        onProgress(progressPercentage)
+        onProgress(progress.percent || 0);
       })
       .on('error', (error) => {
         reject(new Error(`Error converting video: ${error.message}`))

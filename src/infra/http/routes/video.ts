@@ -10,15 +10,16 @@ export async function video(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    await convertVideoToMP3(req.file, (progress: number) => {
-      console.log(`Conversion progress: ${progress}%`);
+    const file = await convertVideoToMP3(req.file, (progress: number) => {
+      const progressPercentage = Math.round(progress);
+      console.log(`Conversion progress: ${progressPercentage}%`);
     });
 
     res.status(200).json({
       videoId,
       message: 'Video status retrieved successfully',
       status: 'Processing',
-      file: req.file
+      file
     })
   } catch (error) {
     res.status(500).json({ error: 'Erro ao processar o vídeo' });
