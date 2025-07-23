@@ -1,5 +1,11 @@
 import { app } from "./app";
-import { config } from "./config";
+import { VideoProcessor } from "./infra/messaging/processors/VideoProcessor";
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+console.log('Environment variables loaded');
+console.log('CLOUDFLARE_R2_ENDPOINT:', process.env.CLOUDFLARE_R2_ENDPOINT);
 
 async function bootstrap() {
   try {
@@ -11,9 +17,14 @@ async function bootstrap() {
 
     const server = app.start()
 
+    const processor = new VideoProcessor()
+    await processor.start()
+
     const gracefulShutdown = async () => {
       console.log('Shutting down gracefully...');
       server.close()
+
+      // await messageQueue.close()
 
       // TODO: Close database connections
       // await closeDatabaseConnections();
