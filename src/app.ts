@@ -3,6 +3,9 @@ import type { Application, Request, Response, NextFunction } from 'express'
 import { type Server } from 'node:http';
 import { config } from './config'
 import routes from './infra/http/routes/index'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 class App {
   public app: Application;

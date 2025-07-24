@@ -1,11 +1,9 @@
 import { Router } from "express";
-import { video } from "./video";
-import { multer } from "../../../shared/utils";
+import videoRoutes from './video'
 
 const app = Router()
 
-
-app.post('/videos/upload', multer.upload.single('video'), video)
+app.use(videoRoutes)
 
 app.get('/video/:videoId/status', (req, res) => {
   const { videoId } = req.params

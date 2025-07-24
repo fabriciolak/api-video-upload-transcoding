@@ -1,28 +1,11 @@
-import type { Request, Response } from "express";
-import { convertVideoToMP3 } from "../../../shared/ffmpeg";
+import { Router } from "express";
+import { multer } from "../../../shared/utils";
+import { VideoController } from "../controllers/video";
 
-export async function video(req: Request, res: Response): Promise<void> {
-  try {
-    const { videoId } = req.params
+const app = Router();
 
-    if (!req.file) {
-      res.status(400).json({ error: 'No video file uploaded' });
-      return;
-    }
+const videoController = new VideoController();
 
-    const file = await convertVideoToMP3(req.file, (progress: number) => {
-      const progressPercentage = Math.round(progress);
-      console.log(`Conversion progress: ${progressPercentage}%`);
-    });
+app.post('/videos/upload', multer.upload.single('video'), videoController.upload.bind(videoController));
 
-    res.status(200).json({
-      videoId,
-      message: 'Video status retrieved successfully',
-      status: 'Processing',
-      file
-    })
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao processar o vídeo' });
-    console.error('Error processing video:', error);
-  }
-}
+export default app
