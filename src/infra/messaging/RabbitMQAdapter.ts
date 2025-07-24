@@ -1,67 +1,64 @@
 import amqp from 'amqplib';
-import { set } from 'zod';
 
-async function connect(uri: string = "amqp://localhost"): Promise<amqp.Channel> {
-  try {
-    const connection = await amqp.connect(uri);
-    const channel = await connection.createChannel();
+let connection: amqp.ChannelModel | null = null
+const channels: Map<string, amqp.Channel> = new Map()
 
-    return channel;
-  } catch (error) {
-    console.error('Failed to connect to RabbitMQ:', error);
-    throw error;
+async function getConnection(uri: string = "amqp://localhost"): Promise<amqp.ChannelModel> {
+  if (!connection) {
+    connection = await amqp.connect(process.env.RABBITMQ_URI || 'amqp://localhost');
+    connection.on('close', () => {
+      connection = null
+      channels.clear()
+    })
   }
+
+  return connection
 }
 
-async function createQueue(channel: amqp.Channel, queue: string): Promise<amqp.Channel> {
-  return new Promise((resolve, reject) => {
-    try {
-      channel.assertQueue(queue, { durable: true })
-      resolve(channel)
-    } catch (error) {
-      console.error(error)
-      reject(error)
-    }
-  })
+async function getChannel(queue: string): Promise<amqp.Channel> {
+  if (!channels.has(queue)) {
+    const conn = await getConnection()
+    const ch = await conn.createChannel()
+    await ch.assertQueue(queue, { durable: true });
+    channels.set(queue, ch)
+  }
+
+  return channels.get(queue)!
 }
 
 async function sendToQueue(queue: string, message: string): Promise<void> {
-  try {
-    const ch = await connect()
-    const channel = await createQueue(ch, queue)
-    channel.sendToQueue(queue, Buffer.from(message), { persistent: true })
-
-    setTimeout(() => {
-      ch.close()
-    }, 500);
-
-  } catch (error) {
-    console.error('Failed to send message to queue:', error);
-    throw error;
-  }
+  const ch = await getChannel(queue)
+  ch.sendToQueue(queue, Buffer.from(message), { persistent: true })
 }
 
-async function consume(queue: string, callback: (msg: string) => void): Promise<void> {
-  try {
-    const ch = await connect();
-    const channel = await createQueue(ch, queue);
+async function consume(queue: string, callback: (msg: string) => Promise<void> | void): Promise<void> {
+  const ch = await getChannel(queue)
+  ch.consume(queue, async (msg: amqp.ConsumeMessage | null) => {
+    if (!msg) return;
 
-    channel.consume(queue, (msg: amqp.ConsumeMessage | null) => {
-      if (!msg) {
-        console.warn('No message received');
-        return;
-      }
-      if (msg) {
-        callback(msg.content.toString());
-      }
-    }, { noAck: true });
-  } catch (error) {
-    console.error('Failed to consume messages from queue:', error);
-    throw error;
+    try {
+      await callback(msg.content.toString())
+      ch.ack(msg);
+    } catch (error) {
+      console.error('Failed to consume messages from queue:', error);
+    }
+  }, { noAck: false })
+}
+
+async function closeConnection(): Promise<void> {
+  for (const ch of channels.values()) {
+    await ch.close()
+  }
+  channels.clear()
+
+  if (connection) {
+    await connection.close()
+    connection = null
   }
 }
 
 export {
   consume,
-  sendToQueue
+  sendToQueue,
+  closeConnection
 }
