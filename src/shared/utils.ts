@@ -1,5 +1,4 @@
 import mult from 'multer';
-import fs from 'fs';
 import path from 'path';
 
 // const storage = mult.diskStorage({
@@ -42,3 +41,12 @@ export const multer = {
     },
   }),
 };
+
+
+// Logger
+
+export const logger = {
+  info: (message: string, meta?: any) => console.info(`[INFO] ${message}`, meta || ''),
+  error: (message: string, error?: any) => console.error(`[ERROR] ${message}`, error || ''),
+  warn: (message: string, meta?: any) => console.warn(`[WARN] ${message}`, meta || '')
+}
